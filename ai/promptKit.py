@@ -150,3 +150,39 @@ def to_anki_tsv(cards_json: dict) -> str:
         f"{c.get('term','')}\t{c.get('definition','')}"
         for c in cards_json.get("cards", [])
     )
+
+# ---------- Feature ③: Convert handwritten math to LaTeX ----------
+import json as _json  # 若上面已 import json 也无冲突
+
+LATEX_SCHEMA = {
+  "type": "object",
+  "properties": {
+    "latex": {"type": "string"},
+    "description": {"type": "string"}
+  },
+  "required": ["latex"]
+}
+
+def image_to_latex(math_text: str):
+    """
+    Convert a handwritten or plain math expression into LaTeX code.
+    If the input is already typed, just standardize it.
+    Returns: dict with 'latex' and optional 'description'.
+    """
+    model = genai.GenerativeModel(MODEL)
+    prompt = (
+      "You are a math notation assistant. "
+      "Given a handwritten or plain text math expression, convert it into valid LaTeX syntax. "
+      "Keep it minimal (no extra spaces), and escape LaTeX properly. "
+      "Also include a short plain English description of what the expression means.\n\n"
+      f"Expression:\n{math_text}\n\n"
+      "Return ONLY JSON per schema."
+    )
+    resp = model.generate_content(
+        prompt,
+        generation_config={
+            "response_mime_type": "application/json",
+            "response_schema": LATEX_SCHEMA
+        }
+    )
+    return _json.loads(resp.text)

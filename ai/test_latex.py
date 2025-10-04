@@ -1,0 +1,14 @@
+import json
+from ai.promptKit import image_to_latex
+
+exprs = [
+    "integral from 0 to infinity of e^(-x^2) dx",
+    "f prime of x equals 3x squared plus 2x minus 5",
+    "summation i from 1 to n of i squared"
+]
+
+for e in exprs:
+    print("Input:", e)
+    out = image_to_latex(e)
+    print(json.dumps(out, indent=2, ensure_ascii=False))
+    print("-" * 50)
