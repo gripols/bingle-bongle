@@ -1,1 +1,11 @@
 .env
+# env / secrets
+.env
+.env.*
+
+# python cache & temp
+__pycache__/
+*.py[cod]
+*.bak
+*.save
+.DS_Store
