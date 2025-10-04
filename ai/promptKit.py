@@ -54,7 +54,7 @@ TRANSLATE_SCHEMA = {
 def translate_with_explain(text: str, target_lang: str):
     """
     Translate text into target_lang (e.g., 'zh-CN' or 'en'),
-    and explain key terms in Plain English with examples.
+    explain key terms in plain English, and elaborate with easy examples.
     """
     model = genai.GenerativeModel(MODEL)
     prompt = (
