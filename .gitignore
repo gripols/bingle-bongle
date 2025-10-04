@@ -10,3 +10,4 @@ __pycache__/
 *.save
 .DS_Store
 ai/list_models.py
+ai/list_models.py
