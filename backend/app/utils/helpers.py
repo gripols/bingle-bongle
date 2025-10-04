@@ -15,3 +15,11 @@ def format_response(data):
         "status": "success",
         "data": data
     }
+
+def card_icon_for_term(term):
+    # Return an emoji or SVG string based on the term type
+    if any(x in term.lower() for x in ["limit", "integral", "derivative", "sum"]):
+        return "📐"
+    if any(x in term.lower() for x in ["language", "translate", "word"]):
+        return "🌐"
+    return "📝"

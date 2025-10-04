@@ -1,3 +1,5 @@
+from ai import promptKit
+
 class GeminiService:
     def __init__(self):
         # Initialize any necessary variables or configurations
@@ -46,3 +48,15 @@ class GeminiService:
             return self.process_prompt(prompt)
         else:
             return "Invalid prompt."
+
+    def analyze_mistakes(self, note):
+        return promptKit.analyze_mistakes(note)
+
+    def translate_with_explain(self, text, target_lang):
+        return promptKit.translate_with_explain(text, target_lang)
+
+    def image_to_latex(self, expr):
+        return promptKit.image_to_latex(expr)
+
+    def make_cards(self, note, limit=10):
+        return promptKit.make_cards(note, limit=limit)

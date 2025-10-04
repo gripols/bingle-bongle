@@ -9,8 +9,8 @@ class LaTeXOCRService:
         :param image_path: Path to the image file containing LaTeX.
         :return: Parsed LaTeX string or an error message.
         """
-        # Implement the OCR logic here
-        pass
+        # Placeholder: implement OCR logic here
+        return {"latex": "", "description": ""}
 
     def validate_latex(self, latex_string):
         """
@@ -19,8 +19,8 @@ class LaTeXOCRService:
         :param latex_string: The LaTeX string to validate.
         :return: True if valid, False otherwise.
         """
-        # Implement validation logic here
-        pass
+        # Placeholder: implement validation logic here
+        return True
 
     def convert_to_pdf(self, latex_string):
         """
@@ -29,5 +29,5 @@ class LaTeXOCRService:
         :param latex_string: The LaTeX string to convert.
         :return: Path to the generated PDF file.
         """
-        # Implement conversion logic here
-        pass
+        # Placeholder: implement conversion logic here
+        return None

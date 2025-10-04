@@ -128,6 +128,14 @@ CARDS_SCHEMA = {
   "required": ["cards"]
 }
 
+def card_graphics(term: str):
+    # Returns a dict with icon and color for a given term
+    if any(x in term.lower() for x in ["limit", "integral", "derivative", "sum"]):
+        return {"icon": "📐", "color": "#3b82f6"}
+    if any(x in term.lower() for x in ["language", "translate", "word"]):
+        return {"icon": "🌐", "color": "#22c55e"}
+    return {"icon": "📝", "color": "#f59e42"}
+
 def make_cards(note_text: str, limit: int=10):
     model = genai.GenerativeModel(MODEL)
     prompt = (
@@ -143,11 +151,16 @@ def make_cards(note_text: str, limit: int=10):
             "response_schema": CARDS_SCHEMA
         }
     )
-    return _json.loads(resp.text)
+    cards = _json.loads(resp.text)
+    # Add icon/color for each card
+    for c in cards.get("cards", []):
+        c.update(card_graphics(c.get("term", "")))
+    return cards
 
 def to_anki_tsv(cards_json: dict) -> str:
+    # Add icon as first column
     return "\n".join(
-        f"{c.get('term','')}\t{c.get('definition','')}"
+        f"{c.get('icon','')}\t{c.get('term','')}\t{c.get('definition','')}"
         for c in cards_json.get("cards", [])
     )
 
