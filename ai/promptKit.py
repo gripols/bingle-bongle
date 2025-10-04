@@ -32,6 +32,9 @@ MISTAKE_SCHEMA = {
 }
 
 def analyze_mistakes(note_text: str):
+    """
+    Detect and analyze mistakes in note_text.
+    """
   model = genai.GenerativeModel(MODEL)
   resp = model.generate_content(
     note_text,
