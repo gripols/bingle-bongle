@@ -139,9 +139,10 @@ def image_to_latex(math_text: str):
     model = genai.GenerativeModel(MODEL)
     prompt = (
       "You are a math notation assistant. "
-      "Given a handwritten or plain text math expression, "
-      "convert it into valid LaTeX syntax. "
-      "Do not add explanations unless explicitly requested. "
+      "Given a handwritten or plain text math expression, convert it into valid LaTeX syntax. "
+      "Keep it minimal (no extra spaces), and escape LaTeX properly. "
+      "Return inline TeX where possible (e.g., x^2 not \\mathrm{x}^2). "
+      "Do not wrap with $...$ or \\[...\\]; return only the LaTeX body. "
       "Also include a short plain English description of what the expression means.\n\n"
       f"Expression:\n{math_text}\n\n"
       "Return ONLY JSON per schema."
