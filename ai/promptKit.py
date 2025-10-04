@@ -77,3 +77,42 @@ def translate_with_explain(text: str, target_lang: str):
     )
     return json.loads(resp.text)
   return json.loads(resp.text)
+
+CARDS_SCHEMA = {
+  "type": "object",
+  "properties": {
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "term": {"type": "string"},
+          "definition": {"type": "string"}
+        },
+        "required": ["term", "definition"]
+      }
+    }
+  },
+  "required": ["cards"]
+}
+
+def make_cards(note_text: str, limit: int=10):
+    model = genai.GenerativeModel(MODEL)
+    prompt = (
+      f"Create up to {limit} concise term-definition pairs from the note below.\n"
+      "Each definition ≤ 2 sentences, concrete, self-contained.\n"
+      "Return ONLY valid JSON per schema.\n\n"
+      f"{note_text}"
+    )
+    resp = model.generate_content(
+        prompt,
+        generation_config={
+            "response_mime_type": "application/json",
+            "response_schema": CARDS_SCHEMA
+        }
+    )
+    return json.loads(resp.text)
+
+def to_anki_tsv(cards_json: dict) -> str:
+    return "\n".join(f"{c.get('term','')}\t{c.get('definition','')}"
+                     for c in cards_json.get("cards", []))
