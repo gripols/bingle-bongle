@@ -9,3 +9,4 @@ __pycache__/
 *.bak
 *.save
 .DS_Store
+ai/list_models.py
