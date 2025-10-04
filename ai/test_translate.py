@@ -1,0 +1,7 @@
+import json
+from promptKit import translate_with_explain
+
+result = translate_with_explain("limit point of a set", "zh-CN")
+print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
