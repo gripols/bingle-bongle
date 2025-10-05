@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EchoClass Demo</title>
+
+<!-- MathJax for LaTeX rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  body { font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 24px; }
+  h1 { font-size: 22px; margin-bottom: 8px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); }
+  .card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  textarea, input, button, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #d1d5db; }
+  pre { white-space: pre-wrap; background: #f8fafc; padding: 10px; border-radius: 10px; max-height: 300px; overflow: auto; }
+  .row { display:flex; gap:8px; }
+  .small { font-size: 12px; color:#6b7280; }
+  .muted { color:#6b7280; }
+</style>
+
+<h1>📝 EchoClass Interactive Demo</h1>
+<p class="small">Endpoints: /api/mistakes · /api/translate · /api/latex · /api/cards</p>
+
+<div class="grid">
+  <div class="card">
+    <h3>① Detect Mistakes</h3>
+    <textarea id="mistNote" rows="6">The limt of sin(x)/x as x -> 0 is 0</textarea>
+    <button onclick="call('mistakes', {note: gid('mistNote').value})">Analyze</button>
+    <pre id="mistOut"></pre>
+  </div>
+
+  <div class="card">
+    <h3>② Translate + Plain English</h3>
+    <textarea id="trText" rows="5">极限点</textarea>
+    <div class="row">
+      <select id="trLang">
+        <option value="en">en</option>
+        <option value="zh-CN">zh-CN</option>
+      </select>
+      <button onclick="translateAndPreview()">Translate</button>
+      <button id="trTTS" disabled onclick="speakPlain()">🔊 Speak</button>
+    </div>
+    <div class="small" style="margin-top:8px">Plain English preview:</div>
+    <div id="trPlain" class="muted" style="padding:8px;border:1px dashed #e5e7eb;border-radius:10px;margin-bottom:8px;"></div>
+    <pre id="trOut"></pre>
+  </div>
+
+  <div class="card">
+    <h3>③ Math → LaTeX</h3>
+    <input id="lxExpr" value="integral from 0 to infinity of e^(-x^2) dx"/>
+    <button onclick="call('latex', {expr: gid('lxExpr').value})">Convert</button>
+    <div class="small" style="margin-top:8px">Rendered preview:</div>
+    <div id="lxMath" style="padding:10px;border:1px dashed #e5e7eb;border-radius:10px;margin-bottom:8px;"></div>
+    <pre id="lxOut"></pre>
+  </div>
+
+  <div class="card">
+    <h3>④ Make Anki/Quizlet Cards</h3>
+    <textarea id="cdNote" rows="6">Limit, epsilon-delta, continuity, differentiability, L'Hôpital, Taylor expansion.</textarea>
+    <div class="row" style="margin-top:8px;">
+      <input id="cdLimit" type="number" value="8" />
+      <button style="flex:1" onclick="genCards()">Generate</button>
+      <button id="cdDl" style="flex:1" disabled onclick="downloadTSV()">Download TSV</button>
+    </div>
+    <div class="small" style="margin-top:8px">Preview (first 5):</div>
+    <ul id="cdPreview" style="margin:6px 0 8px 18px;"></ul>
+    <pre id="cdOut"></pre>
+  </div>
+</div>
+
+<script>
+  const gid = id => document.getElementById(id);
+  let lastCards = [];
+  let lastPlain = "";
+
+  async function call(name, body) {
+    const res = await fetch(`/api/${name}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+
+    if (name === 'mistakes') {
+      gid('mistOut').textContent = JSON.stringify(data, null, 2);
+    } else if (name === 'translate') {
+      gid('trOut').textContent = JSON.stringify(data, null, 2);
+      const plain = (data && data.plain_en) ? String(data.plain_en).trim() : "";
+      lastPlain = plain;
+      gid('trPlain').textContent = plain || "(no plain_en)";
+      gid('trTTS').disabled = !plain;
+    } else if (name === 'latex') {
+      gid('lxOut').textContent = JSON.stringify(data, null, 2);
+      const texBody = data.latex || '';
+      gid('lxMath').innerHTML = `\$begin:math:text$ ${escapeHtml(texBody)} \\$end:math:text$`;
+      if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([gid('lxMath')]).catch(console.error);
+      }
+    } else if (name === 'cards') {
+      gid('cdOut').textContent = JSON.stringify(data, null, 2);
+      lastCards = (data && Array.isArray(data.cards)) ? data.cards : [];
+      const ul = gid('cdPreview');
+      ul.innerHTML = '';
+      lastCards.slice(0,5).forEach(c => {
+        const li = document.createElement('li');
+        li.textContent = `${(c.term||'').trim()} — ${(c.definition||'').trim()}`;
+        ul.appendChild(li);
+      });
+      gid('cdDl').disabled = lastCards.length === 0;
+    }
+  }
+
+  function translateAndPreview() {
+    call('translate', {
+      text: gid('trText').value,
+      target_lang: gid('trLang').value
+    });
+  }
+
+  function speakPlain() {
+    if (!lastPlain) return;
+    const u = new SpeechSynthesisUtterance(lastPlain);
+    u.lang = 'en-US';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  function genCards() {
+    call('cards', {
+      note: gid('cdNote').value,
+      limit: Number(gid('cdLimit').value)
+    });
+  }
+
+  function cardsToTSV(cards) {
+    return (cards || [])
+      .map(c => `${(c.term||'').replaceAll('\t',' ').trim()}\t${(c.definition||'').replaceAll('\t',' ').trim()}`)
+      .join('\n');
+  }
+
+  function downloadText(filename, text) {
+    const blob = new Blob([text], {type: 'text/tab-separated-values;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+  }
+
+  function downloadTSV() {
+    const tsv = cardsToTSV(lastCards);
+    if (!tsv) return;
+    downloadText('anki_cards.tsv', tsv);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  }
+</script>
+</html>
